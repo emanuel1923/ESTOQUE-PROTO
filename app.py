@@ -49,7 +49,7 @@ with col_logo:
         st.markdown("### SUASSUNA\n### FERNANDES")
 
 with col_titulo:
-    st.markdown("<h1 style='margin-bottom: 0;'>Sistema de Controle de Inventário</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='margin-bottom: 0;'>Sistema de Controle de Estoque</h1>", unsafe_allow_html=True)
     st.markdown("<p style='font-size: 1.2em; color: gray;'>Gestão de Suprimentos e Logística Interna</p>", unsafe_allow_html=True)
 
 st.divider()
