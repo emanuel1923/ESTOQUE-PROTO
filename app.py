@@ -69,7 +69,7 @@ CATEGORIAS = ["EPI'S", "FERRAMENTAS", "ESCRITÓRIO", "OUTROS"]
 
 # --- VISÃO GERAL ---
 if aba == "Visão Geral":
-    st.subheader("Estado Atual do Inventário")
+    st.subheader("Estoque Atual")
     df_v = st.session_state.estoque.copy()
     
     if df_v.empty:
@@ -79,7 +79,7 @@ if aba == "Visão Geral":
             color = 'red' if row['Qtd'] <= row['Mínimo'] else 'white'
             return [f'color: {color}'] * len(row)
         
-        st.write("Itens em vermelho indicam necessidade de reposição (estoque abaixo do mínimo).")
+        st.write("Itens em vermelho indicam necessidade de reposição")
         st.dataframe(df_v.style.apply(destacar_estoque_critico, axis=1), use_container_width=True, hide_index=True)
         
         csv = df_v.to_csv(index=False).encode('utf-8')
