@@ -5,13 +5,19 @@ import os
 # Nome do arquivo de banco de dados
 DB_FILE = "estoque_dados.csv"
 
-# Função para carregar dados
+# Função para carregar dados com correção de colunas
 def carregar_dados():
+    colunas_corretas = ["Código", "Material", "Qtd", "Categoria"]
     if os.path.exists(DB_FILE):
-        df = pd.read_csv(DB_FILE, dtype={'Código': str})
-        # Garante que não haja linhas vazias
-        return df.dropna(subset=['Código'])
-    return pd.DataFrame(columns=["Código", "Material", "Qtd", "Categoria"])
+        try:
+            df = pd.read_csv(DB_FILE, dtype={'Código': str})
+            # Verifica se todas as colunas necessárias existem
+            if not all(col in df.columns for col in colunas_corretas):
+                return pd.DataFrame(columns=colunas_corretas)
+            return df.dropna(subset=['Código'])
+        except:
+            return pd.DataFrame(columns=colunas_corretas)
+    return pd.DataFrame(columns=colunas_corretas)
 
 # Função para salvar dados
 def salvar_dados(df):
@@ -63,7 +69,6 @@ elif aba == "Saída":
     if df.empty:
         st.warning("Não há materiais cadastrados.")
     else:
-        # Criamos uma lista formatada para o selectbox
         lista_itens = df.apply(lambda x: f"{x['Código']} - {x['Material']}", axis=1).tolist()
         escolha = st.selectbox("Selecione o Item", lista_itens)
         codigo_sel = escolha.split(" - ")[0]
@@ -113,5 +118,3 @@ elif aba == "Gerenciar Estoque":
                     st.rerun()
                 else:
                     st.error("Digite um nome para editar.")
-            
-        
