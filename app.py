@@ -32,7 +32,7 @@ def salvar_dados(df, arquivo):
     df.to_csv(arquivo, index=False)
 
 # Configuração da Página
-st.set_page_config(page_title="Gestão de Inventário - Suassuna Fernandes", layout="wide")
+st.set_page_config(page_title="Controle de Estoque - Suassuna Fernandes", layout="wide")
 
 # --- CABEÇALHO COM LOGO E NOME ---
 col_logo, col_titulo = st.columns([1, 4])
@@ -40,7 +40,7 @@ col_logo, col_titulo = st.columns([1, 4])
 with col_logo:
     # Tenta carregar a logo se o arquivo existir no seu GitHub
     if os.path.exists("logo.png"):
-        st.image("logo.png", width=150)
+        st.image("SFLOGO.png", width=150)
     else:
         st.write("📌 *Logo aqui*")
 
