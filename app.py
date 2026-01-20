@@ -41,12 +41,13 @@ if 'estoque' not in st.session_state:
 if 'historico' not in st.session_state:
     st.session_state.historico = carregar_historico()
 
-st.title("Controle de Estoque v1.0")
+# Título limpo conforme solicitado
+st.title("Controle de Estoque")
 
 # --- MENU LATERAL ---
 aba = st.sidebar.radio("Navegação", ["Visão Geral", "Entrada/Cadastro", "Saída", "Histórico de Saídas", "Gerenciar Estoque"])
 
-# Categorias definidas (Sem Consumíveis)
+# Categorias definidas
 CATEGORIAS = ["EPI'S", "FERRAMENTAS", "ESCRITÓRIO", "OUTROS"]
 
 if aba == "Visão Geral":
@@ -69,14 +70,16 @@ elif aba == "Entrada/Cadastro":
             df = st.session_state.estoque
             if codigo in df['Código'].values:
                 df.loc[df['Código'] == codigo, 'Qtd'] += qtd
+                msg = f"Quantidade de '{nome}' atualizada com sucesso!"
             else:
                 novo_item = pd.DataFrame({"Código": [codigo], "Material": [nome], "Qtd": [qtd], "Categoria": [cat]})
                 df = pd.concat([df, novo_item], ignore_index=True)
+                msg = f"Produto '{nome}' cadastrado com sucesso!"
             
             st.session_state.estoque = df
             salvar_dados(df, DB_FILE)
-            st.success(f"Item {nome} atualizado!")
-            st.rerun()
+            st.success(msg)
+            st.toast(msg, icon='✅')
 
 elif aba == "Saída":
     st.subheader("Registrar Saída de Material")
@@ -95,30 +98,27 @@ elif aba == "Saída":
             qtd_atual = df.at[idx, 'Qtd']
             
             if qtd_saida <= qtd_atual:
-                # Atualiza Estoque
                 df.at[idx, 'Qtd'] -= qtd_saida
                 st.session_state.estoque = df
                 salvar_dados(df, DB_FILE)
                 
-                # Ajuste de Horário para Brasil (UTC-3)
+                # Horário Brasil (Recife/UTC-3)
                 data_br = datetime.now() - timedelta(hours=3)
                 data_f = data_br.strftime("%d/%m/%Y %H:%M:%S")
                 
-                # Salva no Histórico
+                # Salva Histórico
                 novo_h = pd.DataFrame({
-                    "Data": [data_f],
-                    "Código": [codigo_sel],
-                    "Material": [nome_sel],
-                    "Qtd": [qtd_saida]
+                    "Data": [data_f], "Código": [codigo_sel], "Material": [nome_sel], "Qtd": [qtd_saida]
                 })
                 hist_df = pd.concat([st.session_state.historico, novo_h], ignore_index=True)
                 st.session_state.historico = hist_df
                 salvar_dados(hist_df, HIST_FILE)
                 
-                st.success(f"Saída de {qtd_saida} unidades registrada!")
-                st.rerun()
+                msg_s = f"Saída de {qtd_saida} unidade(s) de '{nome_sel}' registrada!"
+                st.success(msg_s)
+                st.toast(msg_s, icon='📤')
             else:
-                st.error(f"Saldo insuficiente! Stock atual: {qtd_atual}")
+                st.error(f"Saldo insuficiente! Estoque atual: {qtd_atual}")
 
 elif aba == "Histórico de Saídas":
     st.subheader("Relatório de Movimentação (Saídas)")
@@ -127,20 +127,16 @@ elif aba == "Histórico de Saídas":
     else:
         st.dataframe(st.session_state.historico.iloc[::-1], use_container_width=True, hide_index=True)
         if st.button("Limpar Histórico"):
-            if os.path.exists(HIST_FILE):
-                os.remove(HIST_FILE)
+            if os.path.exists(HIST_FILE): os.remove(HIST_FILE)
             st.session_state.historico = pd.DataFrame(columns=["Data", "Código", "Material", "Qtd"])
             st.rerun()
 
 elif aba == "Gerenciar Estoque":
     st.subheader("Editar ou Excluir Materiais")
     df = st.session_state.estoque
-    if df.empty:
-        st.info("Nada para gerenciar.")
-    else:
+    if not df.empty:
         item_sel = st.selectbox("Escolha um item para Modificar", df['Código'] + " - " + df['Material'])
         cod_gerar = item_sel.split(" - ")[0]
-        
         col1, col2 = st.columns(2)
         with col1:
             if st.button("🗑️ APAGAR ITEM COMPLETAMENTE"):
@@ -149,7 +145,6 @@ elif aba == "Gerenciar Estoque":
                 salvar_dados(df, DB_FILE)
                 st.warning("Item removido.")
                 st.rerun()
-        
         with col2:
             st.write("Editar Informações:")
             n_nome = st.text_input("Novo Nome").strip().upper()
@@ -160,5 +155,5 @@ elif aba == "Gerenciar Estoque":
                     df.loc[df['Código'] == cod_gerar, 'Categoria'] = n_cat
                     st.session_state.estoque = df
                     salvar_dados(df, DB_FILE)
-                    st.success("Dados alterados!")
+                    st.success("Alterações salvas!")
                     st.rerun()
