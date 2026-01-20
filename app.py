@@ -40,7 +40,7 @@ col_logo, col_titulo = st.columns([1, 4])
 with col_logo:
     # Tenta carregar a logo se o arquivo existir no seu GitHub
     if os.path.exists("logo.png"):
-        st.image("SFLOGO.png", width=150)
+        st.image("sflogo.png", width=150)
     else:
         st.write("📌 *Logo aqui*")
 
