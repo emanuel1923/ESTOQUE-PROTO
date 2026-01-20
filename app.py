@@ -56,34 +56,51 @@ if aba == "Visão Geral":
 
 elif aba == "Entrada/Cadastro":
     st.subheader("Cadastrar ou Adicionar Item")
+    
+    # Campo de Código fora do Form para permitir a busca automática
+    codigo_input = st.text_input("Digite o Código do Material").strip().upper()
+    
+    nome_padrao = ""
+    cat_index = 0
+    item_existente = False
+
+    # Busca automática se o código já existir
+    if codigo_input:
+        df_atual = st.session_state.estoque
+        if codigo_input in df_atual['Código'].values:
+            dados_item = df_atual[df_atual['Código'] == codigo_input].iloc[0]
+            nome_padrao = dados_item['Material']
+            cat_index = CATEGORIAS.index(dados_item['Categoria']) if dados_item['Categoria'] in CATEGORIAS else 0
+            item_existente = True
+            st.info(f"Produto encontrado: {nome_padrao}")
+
     with st.form("form_entrada", clear_on_submit=True):
-        codigo = st.text_input("Código do Material").strip().upper()
-        nome = st.text_input("Nome do Material").strip().upper()
-        cat = st.selectbox("Categoria", CATEGORIAS)
+        nome = st.text_input("Nome do Material", value=nome_padrao).strip().upper()
+        cat = st.selectbox("Categoria", CATEGORIAS, index=cat_index)
         qtd = st.number_input("Quantidade", min_value=1, step=1)
         btn = st.form_submit_button("Confirmar Entrada")
         
-        if btn and codigo and nome:
+        if btn and codigo_input and nome:
             df = st.session_state.estoque
             tipo_entrada = "Novo Cadastro"
             
-            if codigo in df['Código'].values:
-                df.loc[df['Código'] == codigo, 'Qtd'] += qtd
+            if item_existente:
+                df.loc[df['Código'] == codigo_input, 'Qtd'] += qtd
                 tipo_entrada = "Reposição"
-                msg = f"Quantidade de '{nome}' atualizada com sucesso!"
+                msg = f"Quantidade de '{nome}' atualizada!"
             else:
-                novo_item = pd.DataFrame({"Código": [codigo], "Material": [nome], "Qtd": [qtd], "Categoria": [cat]})
+                novo_item = pd.DataFrame({"Código": [codigo_input], "Material": [nome], "Qtd": [qtd], "Categoria": [cat]})
                 df = pd.concat([df, novo_item], ignore_index=True)
-                msg = f"Produto '{nome}' cadastrado com sucesso!"
+                msg = f"Produto '{nome}' cadastrado!"
             
             st.session_state.estoque = df
             salvar_dados(df, DB_FILE)
             
-            # Registrar Histórico de Entrada
+            # Histórico
             data_br = datetime.now() - timedelta(hours=3)
             data_f = data_br.strftime("%d/%m/%Y %H:%M:%S")
             novo_hist_e = pd.DataFrame({
-                "Data": [data_f], "Código": [codigo], "Material": [nome], "Qtd": [qtd], "Tipo": [tipo_entrada]
+                "Data": [data_f], "Código": [codigo_input], "Material": [nome], "Qtd": [qtd], "Tipo": [tipo_entrada]
             })
             st.session_state.hist_entrada = pd.concat([st.session_state.hist_entrada, novo_hist_e], ignore_index=True)
             salvar_dados(st.session_state.hist_entrada, HIST_ENTRADA_FILE)
@@ -97,8 +114,9 @@ elif aba == "Saída":
     if df.empty:
         st.warning("Não há materiais cadastrados.")
     else:
+        # Busca por Código ou Seleção
         lista_itens = df.apply(lambda x: f"{x['Código']} - {x['Material']}", axis=1).tolist()
-        escolha = st.selectbox("Selecione o Item", lista_itens)
+        escolha = st.selectbox("Selecione o Item (Código - Nome)", lista_itens)
         codigo_sel = escolha.split(" - ")[0]
         nome_sel = escolha.split(" - ")[1]
         
@@ -121,8 +139,9 @@ elif aba == "Saída":
                 msg_s = f"Saída de {qtd_saida} unidade(s) de '{nome_sel}' registrada!"
                 st.success(msg_s)
                 st.toast(msg_s, icon='📤')
+                st.rerun()
             else:
-                st.error(f"Saldo insuficiente!")
+                st.error(f"Saldo insuficiente! Estoque atual: {df.at[idx, 'Qtd']}")
 
 elif aba == "Histórico de Entradas":
     st.subheader("Relatório de Entradas e Cadastros")
