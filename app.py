@@ -32,7 +32,7 @@ def salvar_dados(df, arquivo):
     df.to_csv(arquivo, index=False)
 
 # Configuração da Página
-st.set_page_config(page_title="Suassuna Fernandes - Inventário", layout="wide")
+st.set_page_config(page_title="Suassuna Fernandes - Estoque", layout="wide")
 
 # --- CABEÇALHO PERSONALIZADO ---
 # Usando colunas para organizar a Logo e o Título
