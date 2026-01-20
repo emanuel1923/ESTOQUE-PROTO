@@ -83,7 +83,7 @@ if aba == "Visão Geral":
         st.dataframe(df_v.style.apply(destacar_estoque_critico, axis=1), use_container_width=True, hide_index=True)
         
         csv = df_v.to_csv(index=False).encode('utf-8')
-        st.download_button("Exportar Dados para Excel (CSV)", csv, "inventario_suassuna.csv", "text/csv")
+        st.download_button("Exportar Dados para Excel", csv, "inventario_suassuna.csv", "text/csv")
 
 # --- ENTRADA E CADASTRO ---
 elif aba == "Entrada e Cadastro":
@@ -164,7 +164,7 @@ elif aba == "Saída de Material":
 
 # --- HISTÓRICO ---
 elif aba == "Histórico de Movimentação":
-    st.subheader("Relatórios de Auditoria")
+    st.subheader("Relatórios")
     tab1, tab2 = st.tabs(["Fluxo de Entradas", "Fluxo de Saídas"])
     with tab1:
         st.dataframe(st.session_state.hist_entrada.iloc[::-1], use_container_width=True, hide_index=True)
