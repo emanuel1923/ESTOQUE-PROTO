@@ -31,7 +31,22 @@ def carregar_hist(arquivo, colunas):
 def salvar_dados(df, arquivo):
     df.to_csv(arquivo, index=False)
 
-st.set_page_config(page_title="Sistema de Controle de Inventário", layout="wide")
+# Configuração da Página
+st.set_page_config(page_title="Gestão de Inventário - Suassuna Fernandes", layout="wide")
+
+# --- CABEÇALHO COM LOGO E NOME ---
+col_logo, col_titulo = st.columns([1, 4])
+
+with col_logo:
+    # Tenta carregar a logo se o arquivo existir no seu GitHub
+    if os.path.exists("logo.png"):
+        st.image("logo.png", width=150)
+    else:
+        st.write("📌 *Logo aqui*")
+
+with col_titulo:
+    st.title("Suassuna Fernandes")
+    st.subheader("Sistema de Controle de Inventário")
 
 # Inicialização de Estados
 if 'estoque' not in st.session_state:
@@ -41,9 +56,8 @@ if 'hist_saida' not in st.session_state:
 if 'hist_entrada' not in st.session_state:
     st.session_state.hist_entrada = carregar_hist(HIST_ENTRADA_FILE, ["Data", "Código", "Material", "Qtd", "Tipo"])
 
-st.title("Sistema de Controle de Inventário")
-
-aba = st.sidebar.radio("Navegação", ["Visão Geral", "Entrada e Cadastro", "Saída de Material", "Histórico de Movimentação", "Gerenciar Itens"])
+# --- MENU LATERAL ---
+aba = st.sidebar.radio("Menu de Navegação", ["Visão Geral", "Entrada e Cadastro", "Saída de Material", "Histórico de Movimentação", "Gerenciar Itens"])
 
 CATEGORIAS = ["EPI'S", "FERRAMENTAS", "ESCRITÓRIO", "OUTROS"]
 
@@ -68,7 +82,7 @@ if aba == "Visão Geral":
 # --- ENTRADA E CADASTRO ---
 elif aba == "Entrada e Cadastro":
     st.subheader("Registro de Entrada")
-    cod_in = st.text_input("Código do Material (Leitura de Scanner ou Digitação)").strip().upper()
+    cod_in = st.text_input("Código do Material (Scanner ou Digitação)").strip().upper()
     
     nome_p, cat_i, min_p, existe = "", 0, 5, False
     if cod_in:
@@ -87,7 +101,7 @@ elif aba == "Entrada e Cadastro":
         
         col3, col4 = st.columns(2)
         qtd = col3.number_input("Quantidade a Adicionar", min_value=1, step=1)
-        minimo = col4.number_input("Ponto de Pedido (Estoque Mínimo)", min_value=0, value=min_p, step=1)
+        minimo = col4.number_input("Estoque Mínimo (Alerta)", min_value=0, value=min_p, step=1)
         
         if st.form_submit_button("Confirmar Registro"):
             if cod_in and nome:
@@ -103,7 +117,6 @@ elif aba == "Entrada e Cadastro":
                 st.session_state.estoque = df
                 salvar_dados(df, DB_FILE)
                 
-                # Registro de Histórico
                 dt = (datetime.now() - timedelta(hours=3)).strftime("%d/%m/%Y %H:%M:%S")
                 n_h = pd.DataFrame({"Data": [dt], "Código": [cod_in], "Material": [nome], "Qtd": [qtd], "Tipo": [tipo]})
                 st.session_state.hist_entrada = pd.concat([st.session_state.hist_entrada, n_h], ignore_index=True)
@@ -125,7 +138,6 @@ elif aba == "Saída de Material":
             st.warning(f"Material: {item_s['Material']} | Saldo Disponível: {item_s['Qtd']}")
             
             with st.form("form_saida_material"):
-                # Campo para entrada manual de Setor ou Responsável
                 destino = st.text_input("Setor ou Responsável pelo Recebimento").strip().upper()
                 qtd_s = st.number_input("Quantidade", min_value=1, max_value=int(item_s['Qtd']) if item_s['Qtd'] > 0 else 1, step=1)
                 
@@ -141,70 +153,47 @@ elif aba == "Saída de Material":
                         st.session_state.hist_saida = pd.concat([st.session_state.hist_saida, n_h_s], ignore_index=True)
                         salvar_dados(st.session_state.hist_saida, HIST_SAIDA_FILE)
                         
-                        st.success(f"Saída para {destino} registrada no sistema.")
+                        st.success(f"Saída para {destino} registrada.")
                         st.rerun()
                     else:
-                        st.error("Informe o setor ou o responsável.")
+                        st.error("Informe o destino/responsável.")
         else:
             st.error("Código não localizado.")
 
-# --- HISTÓRICO DE MOVIMENTAÇÃO ---
+# --- HISTÓRICO ---
 elif aba == "Histórico de Movimentação":
     st.subheader("Relatórios de Movimentação")
-    
     col_e, col_s = st.tabs(["Entradas", "Saídas"])
-    
     with col_e:
         if not st.session_state.hist_entrada.empty:
             st.dataframe(st.session_state.hist_entrada.iloc[::-1], use_container_width=True, hide_index=True)
-            st.download_button("Exportar Entradas (CSV)", st.session_state.hist_entrada.to_csv(index=False).encode('utf-8'), "historico_entradas.csv")
-        else: st.info("Sem registros de entrada.")
-        
+        else: st.info("Sem registros.")
     with col_s:
         if not st.session_state.hist_saida.empty:
             st.dataframe(st.session_state.hist_saida.iloc[::-1], use_container_width=True, hide_index=True)
-            st.download_button("Exportar Saídas (CSV)", st.session_state.hist_saida.to_csv(index=False).encode('utf-8'), "historico_saidas.csv")
-        else: st.info("Sem registros de saída.")
+        else: st.info("Sem registros.")
 
-# --- GERENCIAR ITENS ---
+# --- GERENCIAR ---
 elif aba == "Gerenciar Itens":
-    st.subheader("Edição e Exclusão de Materiais")
+    st.subheader("Edição e Exclusão")
     df_g = st.session_state.estoque
-    
     if not df_g.empty:
-        item_sel = st.selectbox("Selecione o Item para Gestão", df_g['Código'] + " - " + df_g['Material'])
+        item_sel = st.selectbox("Selecione o Item", df_g['Código'] + " - " + df_g['Material'])
         cod_ref = item_sel.split(" - ")[0]
-        dados_atuais = df_g[df_g['Código'] == cod_ref].iloc[0]
-        
-        st.divider()
-        st.write(f"Editando dados de: {dados_atuais['Material']}")
+        dados = df_g[df_g['Código'] == cod_ref].iloc[0]
         
         with st.form("form_edicao"):
-            col_ed1, col_ed2 = st.columns(2)
-            novo_cod = col_ed1.text_input("Código do Material", value=dados_atuais['Código']).strip().upper()
-            novo_nome = col_ed2.text_input("Descrição do Material", value=dados_atuais['Material']).strip().upper()
+            c1, c2 = st.columns(2)
+            n_cod = c1.text_input("Novo Código", value=dados['Código']).strip().upper()
+            n_nome = c2.text_input("Nova Descrição", value=dados['Material']).strip().upper()
+            c3, c4 = st.columns(2)
+            n_cat = c3.selectbox("Categoria", CATEGORIAS, index=CATEGORIAS.index(dados['Categoria']))
+            n_min = c4.number_input("Estoque Mínimo", value=int(dados['Mínimo']))
             
-            col_ed3, col_ed4 = st.columns(2)
-            nova_cat = col_ed3.selectbox("Categoria", CATEGORIAS, index=CATEGORIAS.index(dados_atuais['Categoria']))
-            novo_min = col_ed4.number_input("Estoque Mínimo", value=int(dados_atuais['Mínimo']), step=1)
-            
-            col_btn1, col_btn2 = st.columns(2)
-            if col_btn1.form_submit_button("Salvar Alterações"):
+            if st.form_submit_button("Salvar Alterações"):
                 idx = df_g[df_g['Código'] == cod_ref].index[0]
-                df_g.at[idx, 'Código'] = novo_cod
-                df_g.at[idx, 'Material'] = novo_nome
-                df_g.at[idx, 'Categoria'] = nova_cat
-                df_g.at[idx, 'Mínimo'] = novo_min
-                st.session_state.estoque = df_g
+                df_g.at[idx, 'Código'], df_g.at[idx, 'Material'] = n_cod, n_nome
+                df_g.at[idx, 'Categoria'], df_g.at[idx, 'Mínimo'] = n_cat, n_min
                 salvar_dados(df_g, DB_FILE)
-                st.success("Alterações salvas com sucesso.")
+                st.success("Alterado!")
                 st.rerun()
-                
-            if col_btn2.form_submit_button("Excluir Item"):
-                df_novo = df_g[df_g['Código'] != cod_ref]
-                st.session_state.estoque = df_novo
-                salvar_dados(df_novo, DB_FILE)
-                st.warning("Item removido permanentemente.")
-                st.rerun()
-    else:
-        st.info("Não há itens para gerenciar.")
