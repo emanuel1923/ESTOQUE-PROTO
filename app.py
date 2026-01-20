@@ -46,7 +46,7 @@ elif aba == "Entrada/Cadastro":
     with st.form("form_entrada", clear_on_submit=True):
         codigo = st.text_input("Código do Material").strip().upper()
         nome = st.text_input("Nome do Material").strip().upper()
-        cat = st.selectbox("Categoria", ["EPI'S", "FERRAMENTAS", "CONSUMÍVEIS", "ESCRITÓRIO", "OUTROS"])
+        cat = st.selectbox("Categoria", ["EPI'S", "FERRAMENTAS", "ESCRITÓRIO", "OUTROS"])
         qtd = st.number_input("Quantidade", min_value=1, step=1)
         btn = st.form_submit_button("Confirmar Entrada")
         
