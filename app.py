@@ -8,7 +8,7 @@ st.set_page_config(page_title="Suassuna Fernandes - Inventário", layout="wide")
 
 # --- CONEXÃO COM GOOGLE SHEETS ---
 # Use o link da barra de endereços que termina em /edit
-URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jSO0S0qvRerM8mdgZlfldHHjEyYQKETlCy__m7BdluY/edit"
+URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jSO0S0qvRerM8mdgZlfldHHjEyYQKETlCy__m7BdluY/export?format=csv"
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 
