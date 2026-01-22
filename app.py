@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 st.set_page_config(page_title="Gestão de Inventário - Suassuna Fernandes", layout="wide")
 
 # URL DA SUA PLANILHA (COLE AQUI)
-URL_PLANILHA = "COLE_AQUI_O_LINK_DA_SUA_PLANILHA_DO_GOOGLE"
+URL_PLANILHA = "https://docs.google.com/spreadsheets/d/1jSO0S0qvRerM8mdgZlfldHHjEyYQKEtlCy__m7BdIuY/edit?usp=sharing"
 
 # Estabelece conexão com o banco de dados na nuvem
 conn = st.connection("gsheets", type=GSheetsConnection)
